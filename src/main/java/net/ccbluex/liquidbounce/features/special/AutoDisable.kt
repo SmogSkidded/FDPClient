@@ -30,8 +30,7 @@ object AutoDisable : Listenable {
             LiquidBounce.moduleManager.modules
                 .filter { it.state && it.autoDisable == EnumAutoDisableType.FLAG && it.triggerType == EnumTriggerType.TOGGLE }
                 .forEach { module ->
-                    module.state = false
-                    LiquidBounce.hud.addNotification(Notification(this.name, "Disabled ${module.name} due flags.", NotifyType.WARNING, 2000))
+                    LiquidBounce.hud.addNotification(Notification(this.name, "Anticheat may be flagging u.", NotifyType.WARNING, 2000))
                 }
         }
     }
