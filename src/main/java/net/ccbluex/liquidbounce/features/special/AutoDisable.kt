@@ -26,13 +26,6 @@ object AutoDisable : Listenable {
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        if (event.packet is S08PacketPlayerPosLook) {
-            LiquidBounce.moduleManager.modules
-                .filter { it.state && it.autoDisable == EnumAutoDisableType.FLAG && it.triggerType == EnumTriggerType.TOGGLE }
-                .forEach { module ->
-                    LiquidBounce.hud.addNotification(Notification(this.name, "Anticheat may be flagging u.", NotifyType.WARNING, 2000))
-                }
-        }
     }
 
     fun handleGameEnd() {
