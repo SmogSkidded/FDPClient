@@ -226,7 +226,7 @@ class Scaffold : Module() {
     private val towerTimer = TickTimer()
     private var delay: Long = 0
     private var clickDelay: Long = 0
-    private var lastPlace = 0
+    private var lastPlace = 10
 
     // Eagle
     private var placedBlocksWithoutEagle = 0
@@ -303,7 +303,7 @@ class Scaffold : Module() {
         }
 
         if (clickTimer.hasTimePassed(clickDelay)) {
-       /*     fun sendPacket(c08: C08PacketPlayerBlockPlacement) {
+            fun sendPacket(c08: C08PacketPlayerBlockPlacement) {
                 if (clickDelay < 35) {
                     mc.netHandler.addToSendQueue(c08)
                 }
@@ -311,7 +311,7 @@ class Scaffold : Module() {
                     mc.netHandler.addToSendQueue(c08)
                 }
                 mc.netHandler.addToSendQueue(c08)
-            } */
+            }
             when (extraClickValue.get().lowercase()) {
                 "emptyc08" -> sendPacket(C08PacketPlayerBlockPlacement(mc.thePlayer.inventory.getStackInSlot(slot)))
                 "afterplace" -> {
@@ -493,19 +493,6 @@ class Scaffold : Module() {
         // Update and search for new block
         if (event.eventState == EventState.PRE) update()
 
-        // Place block
-      //  if (placeModeValue.equals(eventState.stateName)) place()
-
-        // Reset placeable delay
-        if (targetPlace == null && !placeableDelayValue.equals("OFF") && (!placeDelayTower.get() || !towerStatus)) {
-            if (placeableDelayValue.equals("Smart")) {
-                if (lastPlace == 0) {
-                    delayTimer.reset()
-                }
-            } else {
-                delayTimer.reset()
-            }
-        }
         
         LiquidBounce.moduleManager[StrafeFix::class.java]!!.applyForceStrafe(!rotationsValue.equals("None"), moveFixValue.get())
     }
@@ -747,92 +734,6 @@ class Scaffold : Module() {
                 }
             }
         }
-    }
-
-    /**
-     * Place target block
-     */
-    private fun place() {
-        if (targetPlace == null) {
-            if (!placeableDelayValue.equals("OFF")) {
-                if (lastPlace == 0 && placeableDelayValue.equals("Smart")) delayTimer.reset()
-                if (placeableDelayValue.equals("Normal")) delayTimer.reset()
-                if (lastPlace> 0) lastPlace--
-            }
-            return
-        }
-        if (!delayTimer.hasTimePassed(delay) || !towerStatus && canSameY && lastGroundY - 1 != targetPlace!!.vec3.yCoord.toInt()) {
-            return
-        }
-
-        if (!rotationsValue.equals("None")) {
-            val rayTraceInfo = mc.thePlayer.rayTraceWithServerSideRotation(5.0)
-            when (hitableCheckValue.get().lowercase()) {
-                "simple" -> {
-                    if (rayTraceInfo != null && !rayTraceInfo.blockPos.equals(targetPlace!!.blockPos)) {
-                        return
-                    }
-                }
-                "strict" -> {
-                    if (rayTraceInfo != null && (!rayTraceInfo.blockPos.equals(targetPlace!!.blockPos) || rayTraceInfo.sideHit != targetPlace!!.enumFacing)) {
-                        return
-                    }
-                }
-            }
-        }
-
-        val isDynamicSprint = sprintValue.equals("dynamic")
-        var blockSlot = -1
-        var itemStack = mc.thePlayer.heldItem
-        if (mc.thePlayer.heldItem == null || !(mc.thePlayer.heldItem.item is ItemBlock && !InventoryUtils.isBlockListBlock(mc.thePlayer.heldItem.item as ItemBlock))) {
-            if (autoBlockValue.equals("off")) return
-            blockSlot = InventoryUtils.findAutoBlockBlock()
-            if (blockSlot == -1) return
-            if (autoBlockValue.equals("LiteSpoof") || autoBlockValue.equals("Spoof")) {
-                mc.netHandler.addToSendQueue(C09PacketHeldItemChange(blockSlot - 36))
-            } else {
-                mc.thePlayer.inventory.currentItem = blockSlot - 36
-            }
-            itemStack = mc.thePlayer.inventoryContainer.getSlot(blockSlot).stack
-        }
-        if (isDynamicSprint) {
-            mc.netHandler.addToSendQueue(C0BPacketEntityAction(mc.thePlayer, C0BPacketEntityAction.Action.STOP_SPRINTING))
-        }
-        if (mc.playerController.onPlayerRightClick(mc.thePlayer, mc.theWorld, itemStack, targetPlace!!.blockPos, targetPlace!!.enumFacing, targetPlace!!.vec3)) {
-            // delayTimer.reset()
-            delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
-            if (mc.thePlayer.onGround) {
-                val modifier = speedModifierValue.get()
-                mc.thePlayer.motionX *= modifier.toDouble()
-                mc.thePlayer.motionZ *= modifier.toDouble()
-            }
-
-            if (swingValue.equals("packet")) {
-                mc.netHandler.addToSendQueue(C0APacketAnimation())
-            } else if (swingValue.equals("normal")) {
-                mc.thePlayer.swingItem()
-            }
-            lastPlace = 2
-            lastPlaceBlock = targetPlace!!.blockPos.add(targetPlace!!.enumFacing.directionVec)
-            when (extraClickValue.get().lowercase()) {
-                "afterplace" -> {
-                    // fake click
-                    val blockPos = targetPlace!!.blockPos
-                    val hitVec = targetPlace!!.vec3
-                    afterPlaceC08 = C08PacketPlayerBlockPlacement(targetPlace!!.blockPos, targetPlace!!.enumFacing.index, itemStack, (hitVec.xCoord - blockPos.x.toDouble()).toFloat(), (hitVec.yCoord - blockPos.y.toDouble()).toFloat(), (hitVec.zCoord - blockPos.z.toDouble()).toFloat())
-                }
-            }
-        }
-        if (isDynamicSprint) {
-            mc.netHandler.addToSendQueue(C0BPacketEntityAction(mc.thePlayer, C0BPacketEntityAction.Action.START_SPRINTING))
-        }
-
-        if (autoBlockValue.equals("LiteSpoof") && blockSlot >= 0) {
-            mc.netHandler.addToSendQueue(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
-        }
-
-        // Reset
-        targetPlace = null
     }
 
     /**
