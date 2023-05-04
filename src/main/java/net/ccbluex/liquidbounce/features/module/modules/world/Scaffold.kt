@@ -303,7 +303,7 @@ class Scaffold : Module() {
         }
 
         if (clickTimer.hasTimePassed(clickDelay)) {
-            fun sendPacket(c08: C08PacketPlayerBlockPlacement) {
+       /*     fun sendPacket(c08: C08PacketPlayerBlockPlacement) {
                 if (clickDelay < 35) {
                     mc.netHandler.addToSendQueue(c08)
                 }
@@ -311,7 +311,7 @@ class Scaffold : Module() {
                     mc.netHandler.addToSendQueue(c08)
                 }
                 mc.netHandler.addToSendQueue(c08)
-            }
+            } */
             when (extraClickValue.get().lowercase()) {
                 "emptyc08" -> sendPacket(C08PacketPlayerBlockPlacement(mc.thePlayer.inventory.getStackInSlot(slot)))
                 "afterplace" -> {
@@ -494,7 +494,7 @@ class Scaffold : Module() {
         if (event.eventState == EventState.PRE) update()
 
         // Place block
-        if (placeModeValue.equals(eventState.stateName)) place()
+      //  if (placeModeValue.equals(eventState.stateName)) place()
 
         // Reset placeable delay
         if (targetPlace == null && !placeableDelayValue.equals("OFF") && (!placeDelayTower.get() || !towerStatus)) {
